@@ -4,6 +4,8 @@ Moves the gameplay HUD toward the edges of an ultrawide screen while keeping
 text and icons their original size and the central HUD centred. Works with
 third-person, cockpit, and HUD-only views. Menus are unchanged.
 
+Tested on 21:9, but should work fine for 32:9 and others.
+
 ## Comparisons
 
 Each image shows the original HUD above and the ultrawide HUD below.
