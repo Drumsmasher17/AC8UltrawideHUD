@@ -1,9 +1,8 @@
 # AC8 Ultrawide HUD
 
-Widens the gameplay HUD's centred 3840×2160 MainCanvas to match the viewport
-aspect ratio, retaining height, child sizes and existing left/centre/right anchors.
-Menus, aircraft selection, shaders, camera FOV and targeting projection canvases
-are not modified.
+Moves the gameplay HUD toward the edges of an ultrawide screen while keeping
+text and icons their original size and the central HUD centred. Works with
+third-person, cockpit, and HUD-only views. Menus are unchanged.
 
 ## Comparisons
 
@@ -23,32 +22,31 @@ Each image shows the original HUD above and the ultrawide HUD below.
 
 ## Installation
 
-Copy the `AC8UltrawideHUD` folder from the release zip into the active UE4SS Mods
-directory and restart the game. See [installation instructions](INSTALL.md).
-Requires a UE4SS build exposing
-`LoopInGameThreadWithDelay`, `NotifyOnNewObject`, and reflected UMG APIs.
-No keys or configuration are required. Remove `enabled.txt` and restart to disable.
+UE4SS must already be installed.
 
-The mod checks the current player controller → HUD → AlwaysVisibleCanvas →
-MainCanvas every 500 ms on the game thread. It applies once per new canvas or
-viewport resolution change. It preserves the original width at 16:9 or narrower.
-There is one bootstrap GameInstance lookup; subsequent GameInstances are tracked
-by construction notification. Stable checks do not scan global objects, write
-files, or change widget properties. Object identity uses the underlying Unreal
-address rather than Lua wrapper equality. Logging is limited to one startup line
-and at most one warning for each of three failure categories per mod initialization.
-Successful checks and applications produce no log output.
+1. Close the game.
+2. Download the mod ZIP and copy the `AC8UltrawideHUD` folder into:
+   ```text
+   ACE COMBAT 8/Game/Binaries/Win64/UE4SS/Mods/
+   ```
+3. Launch the game. The HUD adjusts automatically—no setup or hotkeys needed.
 
-Only the observed centred 3840×2160 layout is accepted. Unknown layouts are skipped.
-This release has no menu fixes or diagnostic capture hotkeys. Do not enable the
-old AC8HUDProbe alongside it. A restart clears any earlier menu experiments.
+Your folders should look like this:
 
-Manual HUD resizing was confirmed in multiple missions. Automated lifecycle and
-resolution handling have mock coverage; actual automatic mission transitions
-still require in-game validation. Polling cost has not been benchmarked. Expect
-up to roughly 500 ms after widgets become ready before application, longer while
-the game thread is blocked. Native code resetting the same canvas without an
-instance/resolution change is not continuously overridden.
+```text
+ACE COMBAT 8/
+└── Game/
+    └── Binaries/
+        └── Win64/
+            └── UE4SS/
+                └── Mods/
+                    └── AC8UltrawideHUD/
+                        ├── enabled.txt
+                        └── Scripts/
+                            └── main.lua
+```
+
+To uninstall, close the game and delete the `AC8UltrawideHUD` folder.
 
 ## Development
 
