@@ -2,6 +2,11 @@
 
 ## Verified
 
+- User confirmed the automatic radar correction worked in-game after installation.
+- User confirmed the radar background correction and its reversal. Each became
+  visible after collapsing and expanding the radar, rather than immediately.
+- Radar mocks cover 21:9/32:9 compensation, return to 16:9, late construction,
+  and no repeated child searches or writes during stable gameplay.
 - User visually confirmed the MainCanvas adjustment in multiple gameplay missions.
 - A previous installed automatic build reached gameplay and applied the layout.
 - Review of its log exposed repeated `already has the required width` messages.
@@ -21,15 +26,16 @@
 - Checks run every 500 ms on the game thread, not every rendered frame.
 - Stable checks follow a short ownership chain, read viewport size and compare
   numeric identity/resolution. No layout getters/writes on unchanged instances.
-- One startup log and at most three warning messages per initialization.
-- Distribution contains Lua source, enabled.txt and documentation/license only.
+- One startup log and at most four warning messages per initialization.
+- Distribution contains Lua source, enabled.txt, documentation/license and comparison images.
 
 ## Remaining live validation
 
-The final address-comparison revision has not yet been run in the game. Before
-describing it as fully tested, launch, enter a mission, change missions without
-hotkeys, and check that the layout is correct in both. Confirm UE4SS.log has no
-repeated mod messages. Actual frame-time cost is unmeasured; absence of recurring
+Its mask is refreshed by the game on radar mode changes; changing resolution
+while a radar is open may require collapsing and expanding it once.
+
+32:9 has mock coverage but has not been visually tested. Actual frame-time cost
+is unmeasured; absence of recurring
 scans/logging is not a guarantee that no game/rendering event can cause a hitch.
 
 A game update introducing different HUD dimensions is intentionally unsupported

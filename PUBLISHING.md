@@ -1,7 +1,7 @@
 # Publishing
 
 This folder is the repository root. Upload its contents to a GitHub repository,
-including the `.github` directory. No remote repository has been created or pushed.
+including the `.github` directory.
 The development dependencies and tests use relative paths and work independently
 of the game installation.
 
@@ -9,7 +9,7 @@ of the game installation.
 2. Run `python tests/test_lifecycle.py`.
 3. Perform the final in-game smoke test described in VALIDATION.md.
 4. Run `python package.py`.
-5. Create a GitHub release for version 0.1.1 and attach the generated mod ZIP and
+5. Create a GitHub release for version 0.1.2 and attach the generated mod ZIP and
    `.zip.sha256` file from `dist/`. Use CHANGELOG.md as the release description,
    preserving any outstanding validation limitations.
 

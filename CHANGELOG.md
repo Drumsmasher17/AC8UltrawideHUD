@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.1.2
+
+- Corrects the radar background mask's horizontal position on ultrawide screens.
+- Applies automatically with the gameplay HUD; no shortcut is required.
+- Preserves the radar's visible position and size.
+
+The automatic correction was confirmed in-game. If resolution
+changes while the radar is open, collapse and expand it to refresh its mask.
+
 ## 0.1.1
 
 - Gameplay HUD adjusts automatically to ultrawide aspect ratios.
@@ -11,6 +20,5 @@
 - Removes successful-application logging and limits compatibility/error warnings.
 
 The gameplay layout change has been visually confirmed in multiple missions.
-Automated lifecycle behaviour has mock coverage; this final packaging/performance
-revision still needs an in-game mission-transition smoke test. No frame-time
-benchmark has been performed.
+Automated lifecycle behaviour has mock coverage. No frame-time benchmark has
+been performed.
