@@ -25,7 +25,7 @@ print(destination.name, digest)
 # Keep the repository import bundle in sync with documentation and image updates.
 source_files = [
     'README.md', 'INSTALL.md', 'CHANGELOG.md', 'VALIDATION.md', 'PUBLISHING.md',
-    'LICENSE', '.gitignore', 'requirements-dev.txt', 'package.py',
+    'LICENSE', '.gitignore', '.gitattributes', 'RELEASE_NOTES.md', 'requirements-dev.txt', 'package.py',
     'tests/test_lifecycle.py', 'mod/Scripts/main.lua', 'mod/enabled.txt',
     '.github/workflows/test.yml', 'AC8Ultrawide_ThirdPerson.png',
     'AC8Ultrawide_Cockpit.png', 'AC8Ultrawide_HUDOnly.png',

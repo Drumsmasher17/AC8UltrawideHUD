@@ -2,6 +2,11 @@
 
 ## Verified
 
+- On 2026-10-03, the user confirmed the portrait-mask fix resolves target boxes
+  disappearing in clear sky beside an active portrait in third-person view.
+- Portrait mocks cover mask/drawing agreement at 21:9 and 32:9, restoration at
+  16:9, late construction, unknown layouts, failed-write rollback and stable checks.
+
 - User confirmed the automatic radar correction worked in-game after installation.
 - User confirmed the radar background correction and its reversal. Each became
   visible after collapsing and expanding the radar, rather than immediately.
@@ -26,12 +31,15 @@
 - Checks run every 500 ms on the game thread, not every rendered frame.
 - Stable checks follow a short ownership chain, read viewport size and compare
   numeric identity/resolution. No layout getters/writes on unchanged instances.
-- One startup log and at most four warning messages per initialization.
+- One startup log and at most five warning messages per initialization.
 - Distribution contains Lua source, enabled.txt, documentation/license and comparison images.
 
 ## Remaining live validation
 
-Its mask is refreshed by the game on radar mode changes; changing resolution
+Portrait transitions and the portrait correction in cockpit/HUD-only views have
+not been separately confirmed. The alternate event portrait panel is unchanged.
+
+The radar mask is refreshed by the game on radar mode changes; changing resolution
 while a radar is open may require collapsing and expanding it once.
 
 32:9 has mock coverage but has not been visually tested. Actual frame-time cost

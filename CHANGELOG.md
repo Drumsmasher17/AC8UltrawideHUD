@@ -1,5 +1,14 @@
 # Release notes
 
+## Unreleased — portrait mask correction (live validation pending)
+
+- Fixes enemy target boxes disappearing in clear sky beside the speaking-character
+  portrait in third-person view on ultrawide screens.
+- Aligns the portrait mask with the visible portrait without moving or resizing it.
+
+The fix was confirmed in-game by the user. 32:9 has automated mock coverage but
+has not been visually tested.
+
 ## 0.1.2
 
 - Corrects the radar background mask's horizontal position on ultrawide screens.

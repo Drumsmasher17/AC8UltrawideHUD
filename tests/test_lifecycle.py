@@ -29,8 +29,32 @@ radarSlot.SetOffsets=function(s,v) radarWrites=radarWrites+1; s.offsets=v end
 radar=obj({Slot=radarSlot,RenderTransform={Translation={X=0,Y=0}}})
 radar.GetFName=function() return {ToString=function() return 'MIniMapCanvas' end} end
 radar.SetRenderTranslation=function(s,v) radarWrites=radarWrites+1; s.RenderTransform.Translation=v end
-panel.GetChildrenCount=function() childReads=childReads+1; return radarMissing and 0 or 1 end
-panel.GetChildAt=function() return radar end
+portraitWrites=0
+portraitSlot=obj({offsets={Left=-616,Top=180,Right=420,Bottom=532}})
+portraitSlot.GetAnchors=function(s) return {Minimum={X=s.badanchor and 0 or 1,Y=0},Maximum={X=1,Y=0}} end
+portraitSlot.GetOffsets=function(s) return s.offsets end
+portraitSlot.GetAlignment=function() return {X=0,Y=0} end
+portraitSlot.GetAutoSize=function() return false end
+portraitSlot.SetOffsets=function(s,v) portraitWrites=portraitWrites+1; s.offsets=v end
+portrait=obj({Slot=portraitSlot,RenderTransform={Translation={X=0,Y=0}}})
+portrait.SetRenderTranslation=function(s,v)
+ if portraitFailure then error('translation failure') end
+ portraitWrites=portraitWrites+1; s.RenderTransform.Translation=v
+end
+message=obj({CanvasPanel_ComPortrait=portrait})
+message.GetFName=function() return {ToString=function() return 'HUDMessageWidget' end} end
+panel.GetChildrenCount=function() childReads=childReads+1; return radarMissing and 1 or 2 end
+panel.GetChildAt=function(_,i) if radarMissing or i==1 then return message else return radar end end
+function checkPortrait()
+ local width=math.max(3840,2160*viewport.X/viewport.Y)
+ local scale=viewport.Y/2160
+ local margin=(viewport.X-3840*scale)/2
+ -- Reconstruct the native rectangle calculation and the widened UMG draw.
+ local maskLeft=margin+(3840+portraitSlot.offsets.Left)*scale
+ local drawnLeft=(width+portraitSlot.offsets.Left+portrait.RenderTransform.Translation.X)*scale
+ assert(math.abs(maskLeft-drawnLeft)<0.01, 'portrait mask must match visible portrait')
+ assert(math.abs(drawnLeft-(width-616)*scale)<0.01, 'visible portrait must not move')
+end
 function newslot()
  local s=obj({width=3840,height=2160})
  s.GetAnchors=function(self) layouts=layouts+1; local x=self.badanchor and 0 or .5; return {Minimum={X=x,Y=.5},Maximum={X=.5,Y=.5}} end
@@ -54,6 +78,8 @@ source=(Path(__file__).resolve().parents[1]/'mod/Scripts/main.lua').read_text()
 lua.execute(source)
 lua.execute(r'''
 tick(); assert(writes==1 and slot.width==5160)
+checkPortrait()
+local initialPortraitWrites=portraitWrites
 assert(radarSlot.offsets.Left==-464 and radar.RenderTransform.Translation.X==660)
 assert(radarSlot.offsets.Left+radar.RenderTransform.Translation.X==196)
 local initialRadarWrites,initialChildReads=radarWrites,childReads
@@ -66,12 +92,16 @@ end
 canvas.Slot=slot
 assert(writes==1 and scans==1, 'stable checks must not scan or write')
 assert(radarWrites==initialRadarWrites and childReads==initialChildReads, 'stable radar must not enumerate children or write')
+assert(portraitWrites==initialPortraitWrites, 'stable portrait must not write')
 assert(#logs==logCount and layouts==layoutCount, 'fresh wrappers must not trigger logging or layout revalidation')
 local previous=slot; slot=newslot(); canvas.Slot=slot
 tick(); assert(writes==2 and slot.width==5160 and previous:IsValid(), 'replace even if old object remains valid')
 viewport={X=5120,Y=1440}; tick(); assert(writes==3 and slot.width==7680)
+checkPortrait()
 assert(radarSlot.offsets.Left==-1724 and radar.RenderTransform.Translation.X==1920)
 viewport={X=1920,Y=1080}; tick(); assert(writes==4 and slot.width==3840)
+checkPortrait()
+assert(portraitSlot.offsets.Left==-616 and portrait.RenderTransform.Translation.X==0)
 assert(radarSlot.offsets.Left==196 and radar.RenderTransform.Translation.X==0)
 viewport={X=0,Y=0}; tick(); assert(writes==4)
 viewport={X=3440,Y=1440}; local original=hud; hud=obj({wrong=true})
@@ -103,5 +133,17 @@ radarMissing=false; tick()
 assert(radarSlot.offsets.Left==-464 and radar.RenderTransform.Translation.X==660, 'late radar construction must retry')
 local rw=radarWrites
 tick(); assert(radarWrites==rw, 'correction must not accumulate')
+checkPortrait()
+message.CanvasPanel_ComPortrait=nil; slot=newslot(); canvas.Slot=slot; tick()
+portraitSlot.offsets.Left=-616; portrait.RenderTransform.Translation.X=0
+message.CanvasPanel_ComPortrait=portrait; tick(); checkPortrait()
+local pw=portraitWrites; tick(); assert(portraitWrites==pw, 'late portrait correction must settle')
+portraitSlot.badanchor=true; slot=newslot(); canvas.Slot=slot; tick()
+assert(portraitWrites==pw, 'unknown portrait layouts must not be modified')
+portraitSlot.badanchor=false; slot=newslot(); canvas.Slot=slot
+portraitSlot.offsets.Left=-616; portrait.RenderTransform.Translation.X=0
+portraitFailure=true; tick()
+assert(portraitSlot.offsets.Left==-616 and portrait.RenderTransform.Translation.X==0, 'failed translation must roll back layout')
+portraitFailure=false; tick(); checkPortrait()
 ''')
 print('PASS: stable checks, stale valid HUD, resolution changes, narrow/zero viewport, menus, unknown layout, GameInstance replacement, reload ownership')

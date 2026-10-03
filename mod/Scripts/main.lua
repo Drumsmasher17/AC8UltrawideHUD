@@ -1,4 +1,4 @@
--- AC8UltrawideHUD 0.1.2: gameplay HUD and radar background mask.
+-- AC8UltrawideHUD 0.1.3: gameplay HUD, radar and communication-window masks.
 local generation = (ModRef:GetSharedVariable("AC8UltrawideHUD.Generation") or 0) + 1
 ModRef:SetSharedVariable("AC8UltrawideHUD.Generation", generation)
 local function current() return ModRef:GetSharedVariable("AC8UltrawideHUD.Generation") == generation end
@@ -7,6 +7,7 @@ local function log(s) print("[AC8UltrawideHUD] " .. s .. "\n") end
 local gameInstance, statics, layout, activeSlot
 local activeAddress, lastX, lastY, supported
 local radarReady=false
+local portraitReady=false
 local reported = {}
 local function warnOnce(kind, message)
     if not reported[kind] then reported[kind]=true; log(message) end
@@ -28,6 +29,41 @@ end)
 local function clear()
     activeSlot=nil; activeAddress=nil; supported=nil; lastX=nil; lastY=nil
     radarReady=false
+    portraitReady=false
+end
+local function correctPortrait(panel,width)
+    local message
+    for i=0,panel:GetChildrenCount()-1 do
+        local child=panel:GetChildAt(i)
+        if valid(child) and child:GetFName():ToString()=="HUDMessageWidget" then message=child; break end
+    end
+    if not valid(message) then return false end
+    local portrait=message.CanvasPanel_ComPortrait
+    if not valid(portrait) then return false end
+    local slot=portrait.Slot
+    if not valid(slot) then return false end
+    if not slot:IsA("/Script/UMG.CanvasPanelSlot") then
+        warnOnce("portrait","Skipped unfamiliar portrait layout"); return true
+    end
+    local a,o,p=slot:GetAnchors(),slot:GetOffsets(),slot:GetAlignment()
+    local t=portrait.RenderTransform.Translation
+    if a.Minimum.X~=1 or a.Maximum.X~=1 or a.Minimum.Y~=0 or a.Maximum.Y~=0
+        or p.X~=0 or p.Y~=0 or slot:GetAutoSize()
+        or math.abs(o.Left+t.X+616)>0.1 or math.abs(o.Top-180)>0.1
+        or math.abs(o.Right-420)>0.1 or math.abs(o.Bottom-532)>0.1 or math.abs(t.Y)>0.1 then
+        warnOnce("portrait","Skipped unfamiliar portrait layout"); return true
+    end
+    -- Native mask positioning uses a centred 3840-wide canvas, ignoring the
+    -- widened parent and render translation. A right anchor needs +delta;
+    -- the opposite render translation keeps the visible portrait in place.
+    local delta=(width-3840)/2
+    if math.abs(o.Left-(-616+delta))>0.1 or math.abs(t.X+delta)>0.1 then
+        local original={Left=o.Left,Top=o.Top,Right=o.Right,Bottom=o.Bottom}
+        slot:SetOffsets({Left=-616+delta,Top=o.Top,Right=o.Right,Bottom=o.Bottom})
+        local ok,err=pcall(function() portrait:SetRenderTranslation({X=-delta,Y=t.Y}) end)
+        if not ok then slot:SetOffsets(original); error(err) end
+    end
+    return true
 end
 local function correctRadar(panel,width)
     -- Bounded direct children only, on HUD creation/resolution change.
@@ -83,6 +119,7 @@ local function check()
     if changed then
         activeSlot=slot; activeAddress=address; lastX=nil; lastY=nil; supported=false
         radarReady=false
+        portraitReady=false
         if canvas:GetFName():ToString() ~= "MainCanvas" or not slot:IsA("/Script/UMG.CanvasPanelSlot") then
             warnOnce("container","Skipped unfamiliar HUD container"); return
         end
@@ -95,13 +132,14 @@ local function check()
         if not supported then warnOnce("layout","Skipped unfamiliar MainCanvas layout"); return end
     end
     if not supported then return end
-    if not changed and lastX==viewport.X and lastY==viewport.Y and radarReady then return end
+    if not changed and lastX==viewport.X and lastY==viewport.Y and radarReady and portraitReady then return end
     local width=math.max(3840,2160*viewport.X/viewport.Y)
     local offsets=slot:GetOffsets()
     if math.abs(offsets.Right-width)>0.1 then
         slot:SetSize({X=width,Y=2160})
     end
     radarReady=correctRadar(panel,width)
+    portraitReady=correctPortrait(panel,width)
     lastX=viewport.X; lastY=viewport.Y
 end
 LoopInGameThreadWithDelay(500,function()
