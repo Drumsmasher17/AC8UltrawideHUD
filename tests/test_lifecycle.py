@@ -70,7 +70,12 @@ statics=obj({GetPlayerController=function() return controller end})
 layout=obj({GetViewportSize=function() return viewport end})
 function StaticFindObject(path) if path:find('GameplayStatics') then return statics else return layout end end
 function FindFirstOf() scans=scans+1; return gi end
-function NotifyOnNewObject(_,f) notify=f end
+cameraScans=0; notifications={}
+function FindAllOf() cameraScans=cameraScans+1; return {} end
+function NotifyOnNewObject(path,f)
+ notifications[path]=f
+ if path=='/Script/Engine.GameInstance' then notify=f end
+end
 function ExecuteInGameThread(f) f() end
 function LoopInGameThreadWithDelay(ms,f) assert(ms==500); timers[#timers+1]=f; tick=f end
 ''')
@@ -147,3 +152,23 @@ assert(portraitSlot.offsets.Left==-616 and portrait.RenderTransform.Translation.
 portraitFailure=false; tick(); checkPortrait()
 ''')
 print('PASS: stable checks, stale valid HUD, resolution changes, narrow/zero viewport, menus, unknown layout, GameInstance replacement, reload ownership')
+lua.execute(r'''
+controller.PlayerCameraManager=obj({bDefaultConstrainAspectRatio=true})
+local camera=obj({AspectRatio=16/9,bConstrainAspectRatio=true})
+camera.SetConstraintAspectRatio=function(s,v) s.bConstrainAspectRatio=v end
+camera.SetAspectRatioAxisConstraint=function(s,v) s.axis=v end
+local sequence=obj()
+notifications['/Script/Engine.CameraComponent'](camera)
+notifications['/Script/LevelSequence.LevelSequencePlayer'](sequence)
+viewport={X=3440,Y=1440}; tick()
+assert(not camera.bConstrainAspectRatio and not controller.PlayerCameraManager.bDefaultConstrainAspectRatio)
+assert(camera.axis==nil and sequence.CameraSettings==nil, 'projection threshold must be respected')
+viewport={X=5120,Y=1440}; tick()
+assert(camera.bOverrideAspectRatioAxisConstraint and camera.axis==0)
+assert(sequence.CameraSettings.bOverrideAspectRatioAxisConstraint and sequence.CameraSettings.AspectRatioAxisConstraint==0)
+viewport={X=1920,Y=1080}; tick()
+assert(camera.axis==0 and sequence.CameraSettings.AspectRatioAxisConstraint==0, 'current implementation retains projection overrides')
+camera.dead=true; sequence.dead=true; tick()
+assert(cameraScans==4, 'only two bootstrap scans per initialization')
+''')
+print('PASS: camera notifications, constraint removal, projection threshold, retained overrides and invalid-object cleanup')

@@ -1,4 +1,4 @@
--- AC8UltrawideHUD 0.1.3: gameplay HUD, radar and communication-window masks.
+-- AC8UltrawideHUD: ultrawide HUD/masks and cinematic camera adjustments.
 local generation = (ModRef:GetSharedVariable("AC8UltrawideHUD.Generation") or 0) + 1
 ModRef:SetSharedVariable("AC8UltrawideHUD.Generation", generation)
 local function current() return ModRef:GetSharedVariable("AC8UltrawideHUD.Generation") == generation end
@@ -11,6 +11,74 @@ local portraitReady=false
 local reported = {}
 local function warnOnce(kind, message)
     if not reported[kind] then reported[kind]=true; log(message) end
+end
+local cameras, cameraAddresses = {}, {}
+local function trackCamera(camera)
+    if not current() or not valid(camera) then return end
+    local address=camera:GetAddress()
+    if not cameraAddresses[address] then
+        cameraAddresses[address]=true
+        cameras[#cameras+1]={object=camera,address=address,aspect=camera.AspectRatio,
+            constrained=camera.bConstrainAspectRatio}
+    end
+end
+NotifyOnNewObject("/Script/Engine.CameraComponent", function(camera)
+    ExecuteInGameThread(function() trackCamera(camera) end)
+end)
+local sequencePlayers, sequencePlayerAddresses = {}, {}
+local function trackSequencePlayer(player)
+    if not current() or not valid(player) then return end
+    local address=player:GetAddress()
+    if not sequencePlayerAddresses[address] then
+        sequencePlayerAddresses[address]=true
+        sequencePlayers[#sequencePlayers+1]={object=player,address=address}
+    end
+end
+NotifyOnNewObject("/Script/LevelSequence.LevelSequencePlayer", function(player)
+    ExecuteInGameThread(function() trackSequencePlayer(player) end)
+end)
+local function removeCameraBars(controller)
+    local ok,err=pcall(function()
+        local manager=controller.PlayerCameraManager
+        if valid(manager) and manager.bDefaultConstrainAspectRatio then
+            manager.bDefaultConstrainAspectRatio=false
+        end
+        local viewport=layout:GetViewportSize(controller)
+        local wideViewport=viewport.Y>0 and viewport.X/viewport.Y>2.4
+        -- Keep the sequence's animated focal length, but constrain projection
+        -- on the vertical axis so widening the viewport reveals more horizontally.
+        for i=#cameras,1,-1 do
+            local entry=cameras[i]
+            local camera=entry.object
+            if not valid(camera) then
+                cameraAddresses[entry.address]=nil
+                table.remove(cameras,i)
+            else
+                if camera.bConstrainAspectRatio then
+                    entry.constrained=true
+                    camera:SetConstraintAspectRatio(false)
+                end
+                if wideViewport and entry.constrained then
+                    camera.bOverrideAspectRatioAxisConstraint=true
+                    camera:SetAspectRatioAxisConstraint(0)
+                end
+            end
+        end
+        for i=#sequencePlayers,1,-1 do
+            local entry=sequencePlayers[i]
+            local player=entry.object
+            if not valid(player) then
+                sequencePlayerAddresses[entry.address]=nil
+                table.remove(sequencePlayers,i)
+            elseif wideViewport then
+                player.CameraSettings={
+                    bOverrideAspectRatioAxisConstraint=true,
+                    AspectRatioAxisConstraint=0
+                }
+            end
+        end
+    end)
+    if not ok then warnOnce("camera","Could not disable cinematic camera bars: "..tostring(err)) end
 end
 local function remember(o)
     if current() and valid(o) and not o:GetFullName():find("Default__",1,true) then
@@ -25,6 +93,14 @@ end)
 ExecuteInGameThread(function()
     if not current() then return end
     if not valid(gameInstance) then remember(FindFirstOf("BP_LiveGameInstance_C")) end
+    local existingCameras=FindAllOf("CameraComponent")
+    if existingCameras then
+        for _,camera in pairs(existingCameras) do trackCamera(camera) end
+    end
+    local existingSequencePlayers=FindAllOf("LevelSequencePlayer")
+    if existingSequencePlayers then
+        for _,player in pairs(existingSequencePlayers) do trackSequencePlayer(player) end
+    end
 end)
 local function clear()
     activeSlot=nil; activeAddress=nil; supported=nil; lastX=nil; lastY=nil
@@ -103,6 +179,7 @@ local function check()
     if not valid(statics) or not valid(layout) then return end
     local controller=statics:GetPlayerController(gameInstance,0)
     if not valid(controller) or not controller:IsLocalController() then clear(); return end
+    removeCameraBars(controller)
     local hud=controller:GetHUD()
     if not valid(hud) or not hud:IsA("/Script/Live.LiveHUD") then clear(); return end
     local panel=hud.AlwaysVisibleCanvas
@@ -151,4 +228,4 @@ LoopInGameThreadWithDelay(500,function()
         warnOnce("error","Waiting after layout error (further errors suppressed): "..tostring(err))
     end
 end)
-log("Ready: gameplay HUD only; checks every 500 ms, applies on canvas or resolution change")
+log("Ready: ultrawide HUD/masks and cinematic camera adjustments; checks every 500 ms; HUD applies on canvas or resolution change")

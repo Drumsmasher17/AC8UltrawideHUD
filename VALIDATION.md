@@ -28,13 +28,30 @@
 
 - No F6 or other keybinds, menu code, screenshot capture, or file I/O.
 - One native bootstrap lookup for GameInstance; future instances use notification.
+- Camera components and level-sequence players are enumerated once at bootstrap,
+  then tracked by creation notifications and pruned when invalid.
 - Checks run every 500 ms on the game thread, not every rendered frame.
 - Stable checks follow a short ownership chain, read viewport size and compare
   numeric identity/resolution. No layout getters/writes on unchanged instances.
-- One startup log and at most five warning messages per initialization.
+- Camera checks iterate tracked objects every 500 ms and may reapply projection
+  settings even when the HUD is unchanged.
+- One startup log and at most six warning messages per initialization.
 - Distribution contains Lua source, enabled.txt, documentation/license and comparison images.
 
 ## Remaining live validation
+
+The added cinematic camera changes require in-game testing, including cutscenes,
+gameplay camera transitions and changing aspect ratio. Constraints are disabled
+at all aspect ratios; projection overrides apply only above 2.4:1. Previous
+camera settings are not restored on return to a narrower viewport.
+
+Typical 21:9 resolutions (2560x1080 and 3440x1440) are below the strictly
+greater-than-2.4:1 projection threshold; 5120x1440 (32:9) is above it. The user
+reported no visible black bars or unusual FOV in the 21:9 cutscenes they reviewed
+from before these changes. The extra projection correction is unnecessary for
+those already-correct cutscenes; this does not establish that all 21:9 cutscenes
+are unaffected by the separate constraint-removal behavior. HUD and mask fixes
+remain applicable at 21:9.
 
 Portrait transitions and the portrait correction in cockpit/HUD-only views have
 not been separately confirmed. The alternate event portrait panel is unchanged.

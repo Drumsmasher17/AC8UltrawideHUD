@@ -2,9 +2,25 @@
 
 Moves the gameplay HUD toward the edges of an ultrawide screen while keeping
 text and icons their original size and the central HUD centred. Works with
-third-person, cockpit, and HUD-only views. Menus are unchanged.
+third-person, cockpit, and HUD-only views. Menu layouts are unchanged.
 
-Tested on 21:9, but should work fine for 32:9 and others.
+The extra cinematic projection correction targets very wide aspect ratios,
+such as 32:9. It activates only when the viewport width divided by height is
+strictly greater than 2.4:1. Typical 21:9 resolutions (2560x1080 and 3440x1440)
+are below this threshold, so this extra correction does not activate and is
+unnecessary if your cutscenes already look correct. The ultrawide HUD, radar
+and portrait fixes still apply at 21:9.
+
+Separately, the mod attempts to remove cinematic camera bars by disabling
+camera aspect-ratio constraints at all ratios, including 21:9. That may make
+no visible difference if the cameras already display without bars. Above
+2.4:1, the projection override is intended to reveal more horizontally while
+preserving animated focal length. These camera changes await in-game validation;
+previous settings are not restored when returning to a narrower resolution.
+Restart the game after installing this update.
+
+The HUD fixes have been tested in-game at 21:9. 32:9 has automated mock coverage
+but still needs visual testing, including the extra cinematic correction.
 
 ## Comparisons
 
