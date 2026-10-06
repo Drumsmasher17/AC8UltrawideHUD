@@ -9,7 +9,7 @@ of the game installation.
 2. Run `python tests/test_lifecycle.py`.
 3. Perform the final in-game smoke test described in VALIDATION.md.
 4. Run `python package.py`.
-5. Create a GitHub release for version 0.1.3 (tag `v0.1.3`) and attach the generated mod ZIP and
+5. Create a GitHub release for version 0.1.4 (tag `v0.1.4`) and attach the generated mod ZIP and
    `.zip.sha256` file from `dist/`. Use RELEASE_NOTES.md as the release description.
    The third-person portrait fix has been confirmed in-game; other validation
    limits remain documented in VALIDATION.md.

@@ -1,6 +1,6 @@
 # Release notes
 
-## Unreleased — cinematic camera adjustments
+## 0.1.4 — cinematic camera adjustments
 
 - Adds camera and level-sequence tracking and attempts to remove cinematic bars.
 - Applies the extra cinematic projection override only above 2.4:1, targeting
@@ -12,7 +12,7 @@
 - Camera settings are not restored when switching to a narrower resolution.
 - In-game cinematic behavior is awaiting validation.
 
-## Unreleased — portrait mask correction (live validation pending)
+## 0.1.3 — portrait mask correction
 
 - Fixes enemy target boxes disappearing in clear sky beside the speaking-character
   portrait in third-person view on ultrawide screens.
