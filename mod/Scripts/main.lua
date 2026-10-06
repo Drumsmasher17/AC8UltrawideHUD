@@ -1,4 +1,4 @@
--- AC8UltrawideHUD: ultrawide HUD/masks and cinematic camera adjustments.
+-- AC8UltrawideHUD 0.1.3: ultrawide HUD/masks and cinematic camera adjustments.
 local generation = (ModRef:GetSharedVariable("AC8UltrawideHUD.Generation") or 0) + 1
 ModRef:SetSharedVariable("AC8UltrawideHUD.Generation", generation)
 local function current() return ModRef:GetSharedVariable("AC8UltrawideHUD.Generation") == generation end
